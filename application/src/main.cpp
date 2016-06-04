@@ -42,7 +42,7 @@
 #define DEFAULT_NUM_SAMPLES 16
 #define MIN_NUM_SAMPLES 4
 #define MAX_NUM_SAMPLES 256
-#define DEFAULT_LIGHT_SIZE 0.5f
+#define DEFAULT_LIGHT_SIZE 1
 
 const std::string SHADERS_DIR("shaders/");
 const std::string MEDIA_DIR("media/");
@@ -89,7 +89,7 @@ struct __declspec(align(16)) LightSource
 	LightSource(LightType type, const glm::vec3& position, float diffusePower) : diffuseColor(glm::vec3(1, 1, 1)),
 		diffusePower(diffusePower),
 		specularColor(glm::vec3(1, 1, 1)),
-		specularPower(0),
+		specularPower(1),
 		position(position),
 		type(type),
 		size(DEFAULT_LIGHT_SIZE)
@@ -247,7 +247,7 @@ struct ShadowMap
 
 //////////////////////////////////////////////////////////////////////////
 Camera g_camera(FOV, NEAR, FAR);
-Navigator g_navigator(10.0f, 0.01f, glm::vec3(0, 0, 3));
+Navigator g_navigator(1.0f, 0.01f, glm::vec3(0, 6, 24), glm::pi<float>() * 0.5f, glm::pi<float>() * 0.1f);
 TwType g_vec2Type;
 TwType g_vec3Type;
 TwType g_vec4Type;
@@ -263,7 +263,7 @@ bool g_hasTex0[2] = { false, false };
 GLuint g_tex0[2] = { 0, 0 };
 glm::vec3 g_ambientColor = glm::vec3(0.1f, 0.1f, 0.1f);
 glm::vec3 g_specularColor = glm::vec3(1, 1, 1);
-float g_specularity = 1;
+float g_specularity = 30;
 GLuint g_framebuffer = 0;
 float g_directionalLightShadowMapBias = DEFAULT_DIRECTIONAL_LIGHT_SHADOW_MAP_BIAS;
 float g_pointLightShadowMapBias = DEFAULT_POINT_LIGHT_SHADOW_MAP_BIAS;
