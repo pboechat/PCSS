@@ -1,0 +1,10 @@
+﻿  -- Install configuration: "Debug"
+  -- Up-to-date: F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/include/GLFW
+  -- Up-to-date: F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/include/GLFW/glfw3.h
+  -- Up-to-date: F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/include/GLFW/glfw3native.h
+  -- Installing: F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/cmake/glfw/glfw3Config.cmake
+  -- Up-to-date: F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/cmake/glfw/glfw3ConfigVersion.cmake
+  -- Up-to-date: F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/cmake/glfw/glfwTargets.cmake
+  -- Installing: F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/cmake/glfw/glfwTargets-debug.cmake
+  -- Installing: F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/pkgconfig/glfw3.pc
+  -- Installing: F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/glfw3.lib

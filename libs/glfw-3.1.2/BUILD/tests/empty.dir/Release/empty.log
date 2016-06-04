@@ -1,0 +1,6 @@
+﻿  Building Custom Rule F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/tests/CMakeLists.txt
+  CMake does not need to re-run because F:\CGR.2016\personal\assignment2\libs\glfw-3.1.2\BUILD\tests\CMakeFiles\generate.stamp is up-to-date.
+  empty.c
+  tinycthread.c
+  Generating Code...
+  empty.vcxproj -> F:\CGR.2016\personal\assignment2\libs\glfw-3.1.2\BUILD\tests\Release\empty.exe

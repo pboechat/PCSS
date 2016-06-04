@@ -1,0 +1,8 @@
+F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/include/GLFW/glfw3.h
+F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/include/GLFW/glfw3native.h
+F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/cmake/glfw/glfw3Config.cmake
+F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/cmake/glfw/glfw3ConfigVersion.cmake
+F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/cmake/glfw/glfwTargets.cmake
+F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/cmake/glfw/glfwTargets-release.cmake
+F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/pkgconfig/glfw3.pc
+F:/CGR.2016/personal/assignment2/libs/glfw-3.1.2/INSTALL/lib/glfw3.lib
