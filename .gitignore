@@ -1,3 +1,9 @@
+[Dd]ebug
+
+*.suo
+*.user
+*.sdf
+
 # Compiled Object files
 *.slo
 *.lo
