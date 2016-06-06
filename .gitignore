@@ -32,3 +32,4 @@
 *.exe
 *.out
 *.app
+/application/x64

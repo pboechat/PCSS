@@ -25,12 +25,15 @@
 #include "Shader.h"
 #include "Navigator.h"
 #include "Camera.h"
+#include "LightSource.h"
+#include "Animations.h"
 #include "PoissonGenerator.h"
 
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 768
-#define SHADOW_MAP_SIZE 1024
-#define DEFAULT_DIRECTIONAL_LIGHT_SHADOW_MAP_BIAS 0.025f
+#define SHADOW_MAP_SIZE 4096
+#define MOVE_SPEED 5.0f
+#define DEFAULT_DIRECTIONAL_LIGHT_SHADOW_MAP_BIAS 0.005f
 #define DEFAULT_POINT_LIGHT_SHADOW_MAP_BIAS 0.0075f
 #define FOV 60.0f
 #define NEAR 0.1f
@@ -42,192 +45,17 @@
 #define DEFAULT_NUM_SAMPLES 16
 #define MIN_NUM_SAMPLES 4
 #define MAX_NUM_SAMPLES 256
-#define DEFAULT_LIGHT_SIZE 1
 
 const std::string SHADERS_DIR("shaders/");
 const std::string MEDIA_DIR("media/");
 
 //////////////////////////////////////////////////////////////////////////
-enum LightType
-{
-	DIRECTIONAL = 1,
-	POINT
-
-};
-
 enum DisplayMode
 {
 	HARD_SHADOWS = 0,
 	SOFT_SHADOWS,
 	BLOCKER_SEARCH,
 	PENUMBRA_ESTIMATE
-
-};
-
-#pragma pack(push, 16)
-struct __declspec(align(16)) LightSource
-{
-	glm::vec3 diffuseColor;
-	float diffusePower;
-	glm::vec3 specularColor;
-	float specularPower;
-	glm::vec3 position;
-	LightType type;
-	float size;
-
-	LightSource() :
-		diffuseColor(0,0,0),
-		diffusePower(0),
-		specularColor(0,0,0),
-		specularPower(0),
-		position(0,0,0),
-		type((LightType)0),
-		size(0)
-	{
-	}
-
-	LightSource(LightType type, const glm::vec3& position, float diffusePower) : diffuseColor(glm::vec3(1, 1, 1)),
-		diffusePower(diffusePower),
-		specularColor(glm::vec3(1, 1, 1)),
-		specularPower(1),
-		position(position),
-		type(type),
-		size(DEFAULT_LIGHT_SIZE)
-	{
-	}
-
-};
-#pragma pack(pop)
-
-struct LightSourceAdapter
-{
-	LightSourceAdapter(LightType type, size_t index, TwBar* bar) :
-		enabled(true),
-		index(index),
-		bar(bar),
-		source(type, (type == DIRECTIONAL) ? glm::vec3(0, -1, 0) : glm::vec3(0, 3, 0), (type == DIRECTIONAL) ? 1 : 10)
-	{
-	}
-
-	virtual ~LightSourceAdapter()
-	{
-		LightSource empty;
-		glBufferSubData(GL_UNIFORM_BUFFER, index * sizeof(LightSource), sizeof(LightSource), &empty);
-		TwDeleteBar(bar);
-	}
-
-	inline size_t getIndex() const { return index; }
-
-	inline void translate(const glm::vec3& value)
-	{
-		source.position += value;
-	}
-
-	inline void increasePower()
-	{
-		source.diffusePower = glm::clamp(source.diffusePower + 0.1f, 0.0f, FLT_MAX);
-	}
-
-	inline void decreasePower()
-	{
-		source.diffusePower = glm::clamp(source.diffusePower - 0.1f, 0.0f, FLT_MAX);
-	}
-
-	void initializeTwBar();
-
-	inline void updateData() const
-	{
-		static LightSource empty;
-		if (enabled)
-			glBufferSubData(GL_UNIFORM_BUFFER, index * sizeof(LightSource), sizeof(LightSource), &source);
-		else
-			glBufferSubData(GL_UNIFORM_BUFFER, index * sizeof(LightSource), sizeof(LightSource), &empty);
-	}
-
-	inline glm::mat4 getViewProjection(GLuint textureTarget = 0) const
-	{
-		glm::mat4 projection;
-		glm::mat4 view;
-		switch (source.type)
-		{
-		case DIRECTIONAL:
-			projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -20.0f, 20.0f);
-			view = glm::lookAt(glm::normalize(-source.position), glm::vec3(0, 0, 0), glm::vec3(-1, 0, 0));
-			break;
-		case POINT:
-			projection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, 10.0f);
-			switch (textureTarget)
-			{
-			case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-				view = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, -1, 0));
-				break;
-			case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-				view = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0));
-				break;
-			case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-				view = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
-				break;
-			case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-				view = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1));
-				break;
-			case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-				view = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), glm::vec3(0, -1, 0));
-				break;
-			case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-				view = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, -1, 0));
-				break;
-			default:
-				// FIXME: checking invariants
-				throw std::runtime_error("unknown texture target");
-			}
-			view = glm::translate(view, -source.position);
-			break;
-		default:
-			// FIXME: checking invariants
-			throw std::runtime_error("unknown light type");
-		}
-		return projection * view;
-	}
-
-	void animate(float spf)
-	{
-		static glm::mat4 identity(1);
-		static glm::vec3 yAxis(0, 1, 0);
-		switch (source.type)
-		{
-		case DIRECTIONAL:
-			source.position = (glm::rotate(identity, 
-				(spf * 2.0f * glm::pi<float>()) * 0.25f, // 4 spins per second
-				yAxis) * glm::vec4(source.position, 1)).xyz();
-			break;
-		case POINT:
-			elapsedTime = glm::fmod(elapsedTime + spf, 4.0f);
-			source.position = (glm::translate(identity, glm::vec3(0, (elapsedTime * 0.5f - 1) * 0.05f, 0))
-				* glm::vec4(source.position, 1)).xyz();
-			break;
-		default:
-			// FIXME: checking invariants
-			throw std::runtime_error("unknown light type");
-		}
-	}
-
-	bool isEnabled() const
-	{
-		return enabled;
-	}
-
-	LightType getType() const
-	{
-		return source.type;
-	}
-
-protected:
-	bool enabled;
-	size_t index;
-	TwBar* bar;
-	LightSource source;
-	glm::mat4 model;
-	float elapsedTime;
 
 };
 
@@ -247,7 +75,7 @@ struct ShadowMap
 
 //////////////////////////////////////////////////////////////////////////
 Camera g_camera(FOV, NEAR, FAR);
-Navigator g_navigator(1.0f, 0.01f, glm::vec3(0, 6, 24), glm::pi<float>() * 0.5f, glm::pi<float>() * 0.1f);
+Navigator g_navigator(MOVE_SPEED, 0.01f, glm::vec3(0, 6, 24), glm::pi<float>() * 0.5f, glm::pi<float>() * 0.1f);
 TwType g_vec2Type;
 TwType g_vec3Type;
 TwType g_vec4Type;
@@ -277,6 +105,8 @@ float g_frustumSize = 1;
 GLuint g_distributions[2] = { 0, 0 };
 DisplayMode g_displayMode = DisplayMode::HARD_SHADOWS;
 bool g_animateLights = false;
+std::vector<std::unique_ptr<Animation>> g_lightSourceAnimations;
+std::unique_ptr<Animation> g_navigatorAnimation(nullptr);
 
 //////////////////////////////////////////////////////////////////////////
 void errorCallback(int error, const char* description)
@@ -354,6 +184,12 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			case GLFW_KEY_PAGE_DOWN:
 				g_selectedLightSource = (g_selectedLightSource == 0) ? (size_t)std::max(0, (int)g_lightSources.size() - 1) : g_selectedLightSource - 1;
 				break;
+			case GLFW_KEY_F1:
+				if (g_navigatorAnimation == nullptr)
+					g_navigatorAnimation = std::unique_ptr<Animation>(new ForthStopAndBack(g_navigator.forward(), 17, 4, 6, false, g_navigator));
+			case GLFW_KEY_F2:
+				if (g_navigatorAnimation == nullptr)
+					g_navigatorAnimation = std::unique_ptr<Animation>(new ForthStopAndBack(g_navigator.forward(), 17, 8, 10, false, g_navigator));
 			}
 		}
 		else if (action == GLFW_RELEASE)
@@ -480,21 +316,26 @@ void defineAnttweakbarStructs()
 void TW_CALL removeLightCallback(void *clientData)
 {
 	auto i = *reinterpret_cast<size_t*>(clientData);
-	auto it1 = std::find_if(g_lightSources.begin(), g_lightSources.end(), [i](const auto& light) { return light->getIndex() == i; });
+	auto it1 = std::find_if(g_lightSourceAnimations.begin(), g_lightSourceAnimations.end(), [i](const auto& lightSourceAnimation) {	return static_cast<LightSourceAdapter&>(lightSourceAnimation->getTarget()).getIndex() == i; });
 	// FIXME: checking invariants
-	if (it1 == g_lightSources.end())
-		throw std::runtime_error("invalid light index");
-	*it1 = nullptr;
-	g_lightSources.erase(it1);
-	auto it2 = std::find_if(g_shadowMaps.begin(), g_shadowMaps.end(), [i](const auto& shadowMap) { return shadowMap.index == i; });
+	if (it1 == g_lightSourceAnimations.end())
+		throw std::runtime_error("invalid light source animation");
+	g_lightSourceAnimations.erase(it1);
+	auto it2 = std::find_if(g_lightSources.begin(), g_lightSources.end(), [i](const auto& light) { return light->getIndex() == i; });
 	// FIXME: checking invariants
-	if (it2 == g_shadowMaps.end())
-		throw std::runtime_error("invalid shadow map index");
-	if (it2->hasTexture)
-		glDeleteTextures(1, &it2->texture);
-	if (it2->hasCubeMap)
-		glDeleteTextures(1, &it2->cubeMap);
-	g_shadowMaps.erase(it2);
+	if (it2 == g_lightSources.end())
+		throw std::runtime_error("invalid light source");
+	*it2 = nullptr;
+	g_lightSources.erase(it2);
+	auto it3 = std::find_if(g_shadowMaps.begin(), g_shadowMaps.end(), [i](const auto& shadowMap) { return shadowMap.index == i; });
+	// FIXME: checking invariants
+	if (it3 == g_shadowMaps.end())
+		throw std::runtime_error("invalid shadow map");
+	if (it3->hasTexture)
+		glDeleteTextures(1, &it3->texture);
+	if (it3->hasCubeMap)
+		glDeleteTextures(1, &it3->cubeMap);
+	g_shadowMaps.erase(it3);
 	g_selectedLightSource = 0;
 }
 
@@ -517,8 +358,7 @@ void TW_CALL addLightCallback(void *clientData)
 		throw std::runtime_error("unknown light type");
 	}
 	TwDefine((barName + " label='" + label + "' ").c_str());
-	g_lightSources.emplace_back(new LightSourceAdapter(g_selectedLightType, i, newBar));
-	g_lightSources[i]->initializeTwBar();
+	std::unique_ptr<LightSourceAdapter> adapter(new LightSourceAdapter(g_selectedLightType, i, newBar));
 	GLuint shadowMapTexture;
 	glGenTextures(1, &shadowMapTexture);
 	switch (g_selectedLightType)
@@ -532,6 +372,7 @@ void TW_CALL addLightCallback(void *clientData)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		g_shadowMaps.emplace_back(ShadowMap{ i, true, shadowMapTexture, -2, glm::mat4(1), -2, false, 0, -2 });
 		glBindTexture(GL_TEXTURE_2D, 0);
+		g_lightSourceAnimations.emplace_back(new Rotate(glm::vec3(0, 1, 0), 0.25f, true, *adapter));
 		break;
 	case POINT:
 		glBindTexture(GL_TEXTURE_CUBE_MAP, shadowMapTexture);
@@ -548,11 +389,14 @@ void TW_CALL addLightCallback(void *clientData)
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		g_shadowMaps.emplace_back(ShadowMap{ i, false, 0, -2, glm::mat4(1), -2, true, shadowMapTexture, -2 });
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+		g_lightSourceAnimations.emplace_back(new ForthAndBack(glm::vec3(0, 1, 0), 6, 2, true, *adapter));
 		break;
 	default:
 		// FIXME: checking invariants
 		throw std::runtime_error("unknown light type");
 	}
+	g_lightSources.emplace_back(std::move(adapter));
+	g_lightSources[i]->initializeTwBar();
 	checkOpenGLError();
 }
 
@@ -1071,14 +915,26 @@ int main(int argc, char** argv)
 			auto spf = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() / 1000.0f;
 
 			if (g_animateLights)
-				for (auto& lightSource : g_lightSources)
+				for (auto i = 0; i < g_lightSources.size(); i++)
 				{
+					auto& lightSource = g_lightSources[i];
 					if (!lightSource->isEnabled())
 						continue;
-					lightSource->animate(spf);
+					g_lightSourceAnimations[i]->update(spf);
 				}
 
-			g_navigator.update(spf);
+			if (g_navigatorAnimation != nullptr)
+			{
+				if (g_navigatorAnimation->isFinished())
+				{
+					g_navigatorAnimation = nullptr;
+					g_navigator.update(spf);
+				}
+				else
+					g_navigatorAnimation->update(spf);
+			}
+			else
+				g_navigator.update(spf);
 
 			std::string title = "PCSS @ " + std::to_string(1.0f / spf) + " fps";
 			glfwSetWindowTitle(window, title.c_str());

@@ -6,8 +6,9 @@
 #include <glm/gtx/common.hpp>
 
 #include "GLUtils.h"
+#include "IMovable.h"
 
-class Navigator
+class Navigator : public IMovable
 {
 private:
 	float moveSpeed, rotateSpeed;
@@ -79,6 +80,11 @@ public:
 	virtual glm::vec3 getPosition() const
 	{
 		return position;
+	}
+
+	virtual void setPosition(const glm::vec3& position)
+	{
+		this->position = position;
 	}
 
 	void buttonDown(int button)
@@ -186,6 +192,12 @@ public:
 			walk(moveZ * moveSpeed * deltaTime);
 		if (moveX != 0 || moveZ != 0)
 			updateAxis();
+	}
+
+
+	inline glm::vec3 forward() const
+	{
+		return -w;
 	}
 
 };

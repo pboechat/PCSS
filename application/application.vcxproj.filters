@@ -36,6 +36,15 @@
     <ClInclude Include="src\PoissonGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\IMovable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LightSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Animations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">

@@ -19,8 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Animations.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\GLUtils.h" />
+    <ClInclude Include="src\IMovable.h" />
+    <ClInclude Include="src\LightSource.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Navigator.h" />
     <ClInclude Include="src\objloader.hpp" />
