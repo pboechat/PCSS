@@ -9,4 +9,4 @@ Developed during my *photorealistic rendering* PhD course.
 
 Video:
 
-[![ScreenShot](www.pedroboechat.com/images/PCSS-video-thumbnail.png)](https://www.youtube.com/watch?v=g-AFYDhyN3w)
+[![ScreenShot](http://www.pedroboechat.com/images/PCSS-video-thumbnail.png)](https://www.youtube.com/watch?v=g-AFYDhyN3w)
