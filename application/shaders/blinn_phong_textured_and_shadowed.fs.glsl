@@ -101,12 +101,11 @@ vec3 BlinnPhong(vec3 materialDiffuseColor,
 	float lightDiffusePower, 
 	vec3 lightSpecularColor, 
 	float lightSpecularPower,
-	float NdotH,
+	float NdotL,
 	float distanceAttenuation)
 {
-	return NdotH * materialDiffuseColor * 
-						lightDiffuseColor * lightDiffusePower / distanceAttenuation +
-					pow(NdotH, materialSpecularity) * materialSpecularColor *
+	return materialDiffuseColor * lightDiffuseColor * lightDiffusePower * NdotL / distanceAttenuation +
+					pow(NdotL, materialSpecularity) * materialSpecularColor *
 						lightSpecularColor * lightSpecularPower / distanceAttenuation;
 }
 
